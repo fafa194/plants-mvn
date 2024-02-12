@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Management</title>
+  <!-- Dodaj link do Bootstrap CSS dla prostego stylowania -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Dodaj stylizację dla podziału okna */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .form-container {
+      width: 100%;
+      max-width: 600px;
+    }
+    .list-container {
+      width: 100%;
+      max-width: 1200px;
+      overflow-y: auto;
+      max-height: 400px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-4">
+  <h2>Plant Management</h2>
+
+  <!-- Formularz dodawania rośliny -->
+  <div class="form-container">
+    <form id="addPlantForm">
+      <div class="form-group">
+        <label for="id">ID:</label>
+        <input type="number" class="form-control" id="id" name="id" disabled>
+      </div>
+      <div class="form-group">
+        <label for="polishName">Polish Name:</label>
+        <input type="text" class="form-control" id="polishName" name="polishName" required>
+      </div>
+      <div class="form-group">
+        <label for="latinName">Latin Name:</label>
+        <input type="text" class="form-control" id="latinName" name="latinName" required>
+      </div>
+      <div class="form-group">
+        <label for="watering">Watering:</label>
+        <input type="number" class="form-control" id="watering" name="watering" required>
+      </div>
+      <div class="form-group">
+        <label for="blooming">Blooming:</label>
+        <select class="form-control" id="blooming" name="blooming" required>
+          <option value="">Select Blooming</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addPlant()">Add Plant</button>
+    </form>
+  </div>
+
+  <hr>
+
+  <!-- Formularz wyświetlania rośliny po ID -->
+  <div class="form-container">
+    <form id="showPlantForm">
+      <div class="form-group">
+        <label for="showPlantId">Show Plant by ID:</label>
+        <input type="number" class="form-control" id="showPlantId" name="showPlantId" required>
+      </div>
+      <button type="button" class="btn btn-success" onclick="showPlantById()">Show Plant</button>
+      <button type="button" class="btn btn-info ml-2" onclick="showAllPlants()">Show All Plants</button>
+    </form>
+  </div>
+
+  <hr>
+
+  <!-- Tabela wyświetlająca rośliny -->
+  <h3>Plants List</h3>
+  <div class="list-container">
+    <table class="table">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Polish Name</th>
+        <th>Latin Name</th>
+        <th>Watering</th>
+        <th>Blooming</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody id="plantsTableBody">
+      <!-- Tabela zostanie wypełniona dynamicznie za pomocą JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dodaj link do Bootstrap JS oraz jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- JavaScript dla obsługi formularza i tabeli -->
+<script>
+  // Zmieniony JavaScript do obsługi dodawania rośliny
+  // Funkcja dodająca roślinę
+  function addPlant() {
+    var plant = {
+      polish_name: document.getElementById('polishName').value,
+      latin_name: document.getElementById('latinName').value,
+      watering: parseInt(document.getElementById('watering').value),
+      blooming: document.getElementById('blooming').value
+    };
+
+    // Wywołaj API POST /plants, aby dodać roślinę
+    fetch('/plants', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify([plant])  // Przesyłaj roślinę w formie listy
+    })
+            .then(response => {
+              // Jeśli dodanie było udane, wyczyść formularz i odśwież listę roślin
+              if (response.ok) {
+                clearForm();
+                getPlants();
+              }
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Funkcja do wyczyszczenia formularza
+  function clearForm() {
+    document.getElementById('polishName').value = '';
+    document.getElementById('latinName').value = '';
+    document.getElementById('watering').value = '';
+    document.getElementById('blooming').value = '';
+  }
+
+  // Funkcja pobierająca rośliny z API i aktualizująca tabelę
+  function getPlants() {
+    fetch('/plants')
+            .then(response => response.json())
+            .then(plants => {
+              var plantsTableBody = document.getElementById('plantsTableBody');
+              plantsTableBody.innerHTML = ''; // Wyczyść istniejące wpisy w tabeli
+
+              plants.forEach(plant => {
+                var row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${plant.id}</td>
+                    <td>${plant.polish_name}</td>
+                    <td>${plant.latin_name}</td>
+                    <td>${plant.watering}</td>
+                    <td>${plant.blooming}</td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editPlant(${plant.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="deletePlant(${plant.id})">Delete</button>
+                    </td>
+                `;
+                plantsTableBody.appendChild(row);
+              });
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Funkcja do pobierania i wyświetlania rośliny po ID
+  function showPlantById() {
+    var id = parseInt(document.getElementById('showPlantId').value);
+
+    fetch(`/plants/${id}`)
+            .then(response => response.json())
+            .then(plant => {
+              // Wyczyść istniejące wpisy w tabeli
+              var plantsTableBody = document.getElementById('plantsTableBody');
+              plantsTableBody.innerHTML = '';
+
+              // Dodaj wpis z rośliną o danym ID do tabeli
+              var row = document.createElement('tr');
+              row.innerHTML = `
+                  <td>${plant.id}</td>
+                  <td>${plant.polish_name}</td>
+                  <td>${plant.latin_name}</td>
+                  <td>${plant.watering}</td>
+                  <td>${plant.blooming}</td>
+                  <td>
+                      <button class="btn btn-warning" onclick="editPlant(${plant.id})">Edit</button>
+                      <button class="btn btn-danger" onclick="deletePlant(${plant.id})">Delete</button>
+                  </td>
+              `;
+              plantsTableBody.appendChild(row);
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Funkcja do wyświetlania wszystkich roślin
+  function showAllPlants() {
+    getPlants();
+  }
+
+  // Funkcja usuwająca roślinę
+  function deletePlant(id) {
+    // Wywołaj API DELETE /plants/{id}, aby usunąć roślinę o danym ID
+    fetch(`/plants/${id}`, {
+      method: 'DELETE'
+    })
+            .then(response => {
+              // Jeśli usunięcie było udane, odśwież listę roślin
+              if (response.ok) {
+                getPlants();
+              }
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Funkcja edytująca roślinę
+  function editPlant(id) {
+    // Pobierz roślinę o danym ID
+    fetch(`/plants/${id}`)
+            .then(response => response.json())
+            .then(plant => {
+              // Wypełnij formularz edycji danymi z pobranej rośliny
+              document.getElementById('id').value = plant.id;
+              document.getElementById('polishName').value = plant.polish_name;
+              document.getElementById('latinName').value = plant.latin_name;
+              document.getElementById('watering').value = plant.watering;
+              document.getElementById('blooming').value = plant.blooming;
+
+              // Dodaj przycisk do zapisu edycji
+              var saveButton = document.createElement('button');
+              saveButton.className = 'btn btn-success';
+              saveButton.textContent = 'Save';
+              saveButton.onclick = function () {
+                saveEditedPlant(id);
+              };
+
+              // Zastąp przycisk "Add Plant" przyciskiem "Save"
+              var addButton = document.querySelector('#addPlantForm button');
+              addButton.parentNode.replaceChild(saveButton, addButton);
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Funkcja zapisująca edytowaną roślinę
+  function saveEditedPlant(id) {
+    var updatedPlant = {
+      id: parseInt(document.getElementById('id').value),
+      polish_name: document.getElementById('polishName').value,
+      latin_name: document.getElementById('latinName').value,
+      watering: parseInt(document.getElementById('watering').value),
+      blooming: document.getElementById('blooming').value
+    };
+
+    // Wywołaj API PUT /plants/{id}, aby zaktualizować roślinę o danym ID
+    fetch(`/plants/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatedPlant)
+    })
+            .then(response => {
+              // Jeśli aktualizacja była udana, przywróć formularz dodawania rośliny
+              if (response.ok) {
+                var addButton = document.createElement('button');
+                addButton.className = 'btn btn-primary';
+                addButton.textContent = 'Add Plant';
+                addButton.onclick = addPlant;
+
+                // Zastąp przycisk "Save" przyciskiem "Add Plant"
+                var saveButton = document.querySelector('#addPlantForm button.btn-success');
+                saveButton.parentNode.replaceChild(addButton, saveButton);
+
+                getPlants();
+
+                // Wyczyść formularz edycji
+                document.getElementById('id').value = '';
+                document.getElementById('polishName').value = '';
+                document.getElementById('latinName').value = '';
+                document.getElementById('watering').value = '';
+                document.getElementById('blooming').value = '';
+
+                // Odśwież listę roślin
+                getPlants();
+              }
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Po załadowaniu strony, pobierz i wyświetl istniejące rośliny
+  window.onload = function () {
+    getPlants();
+  };
+</script>
+
+</body>
+</html>
