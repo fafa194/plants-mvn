@@ -1,0 +1,25 @@
+version: '3'
+services:
+#  api:
+#    build: .
+#    ports:
+#      - '9090:9090'
+#    depends_on:
+#      - database
+
+
+  database:
+    container_name: 'database'
+    image: mysql:8.3.0
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: plantdb
+      MYSQL_INITDB_SKIP_TZINFO: "1"
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      LANG: en_US.utf8
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d
