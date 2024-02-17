@@ -12,9 +12,9 @@ jobs:
       - name: Run SOOS DAST Analysis
         uses: soos-io/soos-dast-github-action@v2
         with:
-          client_id: ${{ secrets.hy1xpw7dd }}
-          api_key: ${{ secrets.MjU3OTNmZmItNzM3NS00ZGQxLTlhMDQtNjllZmRhNGQ2MTUy }}
-          project_name: "Mvn platnts"
+          client_id: hy1xpw7dd
+          api_key: MjU3OTNmZmItNzM3NS00ZGQxLTlhMDQtNjllZmRhNGQ2MTUy
+          project_name: "Mvn plants"
           scan_mode: "baseline"
           api_url: "https://api.soos.io/api/"
           target_url: "https://www.example.com/"
