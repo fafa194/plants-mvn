@@ -36,6 +36,7 @@ jobs:
           
       - name: Run OWASP ZAP DAST
         run: |
+          cd plantmanagement
           docker run --name zap-container -u zap -p 9090:9090 -d owasp/zap2docker-stable
           mvn -Dzap.host=172.17.0.1 -Dzap.port=9090 verify
     
